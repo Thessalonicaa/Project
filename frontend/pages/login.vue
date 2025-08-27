@@ -2,7 +2,7 @@
   <div class="flex justify-center items-center min-h-screen bg-gradient-to-br from-sky-100 to-white">
     <div class="bg-gradient-to-r from-teal-300 to-sky-400 p-6 rounded shadow w-80 text-white hover:scale-105 transform transition duration-300">
       <form @submit.prevent="handleLogin"> <!-- เพิ่ม form -->
-        <h1 class="text-xl font-bold mb-4 text-center">Login</h1>
+        <h1 class="text-xl font-bold mb-4 text-center">Login ที่นี่</h1>
 
         <input
           v-model="username"
