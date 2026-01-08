@@ -1,0 +1,5 @@
+// Run in backend directory to install dependencies:
+// npm install mongoose socket.io cors dotenv
+
+// Or if you need to reinstall all:
+// npm install

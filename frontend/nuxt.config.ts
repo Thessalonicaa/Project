@@ -1,12 +1,27 @@
-
-import tailwindcss from "@tailwindcss/vite";
-
 export default defineNuxtConfig({
-  compatibilityDate: "2024-11-01",
-  devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
-  vite: {
-    plugins: [tailwindcss()],
-  },
-});
 
+  postcss: {
+    plugins: {
+      tailwindcss: {},
+      autoprefixer: {},
+    },
+  },
+
+  nitro: {
+    compatibilityDate: '2025-08-22'
+  },
+
+  // เพิ่มการตั้งค่า pages
+  pages: true,
+
+  // เพิ่ม modules ที่จำเป็น
+  modules: [
+    '@nuxtjs/tailwindcss'
+  ],
+
+  // กำหนดค่า build
+  build: {
+    transpile: ['vue-router']
+  }
+})

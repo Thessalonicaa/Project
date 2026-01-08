@@ -1,0 +1,5 @@
+// Install Socket.IO client in package.json
+// In frontend directory, run:
+// npm install socket.io-client
+
+// Then update messages.vue script section with above implementation

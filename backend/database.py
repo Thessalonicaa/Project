@@ -1,18 +1,55 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy.orm import Session
+from mongoengine import Document, StringField, IntField, FloatField, ListField, ReferenceField, DateTimeField, BooleanField
+from datetime import datetime
 
-DATABASE_URL = "sqlite:///./attendance.db"
+# ✅ USER MODEL
+class User(Document):
+    username = StringField(unique=True, required=True)
+    password = StringField(required=True)
+    role = StringField(default='user')  # 'user' or 'seller'
+    profile_image = StringField()  # Base64 image data
+    created_at = DateTimeField(default=datetime.utcnow)
+    
+    meta = {
+        'collection': 'users',
+        'indexes': ['username']
+    }
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# ✅ SELLER MODEL
+class Seller(Document):
+    user = ReferenceField(User, required=True)
+    username = StringField(required=True)
+    email = StringField(required=True, unique=True)
+    password = StringField(required=True)
+    business_name = StringField()
+    contact_info = StringField()
+    phonenumber = StringField()
+    role = StringField(default='seller')
+    created_at = DateTimeField(default=datetime.utcnow)
+    
+    meta = {
+        'collection': 'sellers',
+        'indexes': ['email', 'user']
+    }
 
-Base = declarative_base()
-
-def get_db():
-    db: Session = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# ✅ CAR MODEL
+class Car(Document):
+    seller = ReferenceField(Seller, required=True)
+    brand = StringField(required=True)
+    model = StringField(required=True)
+    year = IntField(required=True)
+    license_plate = StringField()
+    description = StringField()
+    price = FloatField(required=True)
+    images = ListField(StringField())
+    
+    # ✅ NEW FIELDS - Fuel Type, Transmission, Car Type
+    fuel_type = StringField(default='Petrol', choices=['Petrol', 'Diesel', 'Hybrid', 'Electric'])
+    transmission = StringField(default='Automatic', choices=['Automatic', 'Manual'])
+    car_type = StringField(default='Sedan', choices=['Sedan', 'SUV', 'Pickup', 'Van', 'Sports'])
+    
+    created_at = DateTimeField(default=datetime.utcnow)
+    
+    meta = {
+        'collection': 'cars',
+        'indexes': ['seller', 'brand', 'created_at', 'fuel_type', 'transmission', 'car_type']
+    }
