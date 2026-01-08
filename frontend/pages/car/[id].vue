@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white p-6">
+  <div class="min-h-screen bg-gradient-to-br bg-gray-950 text-white p-6">
     <div class="max-w-7xl mx-auto">
       <!-- Back Button -->
       <NuxtLink to="/CarList" class="inline-flex items-center gap-2 text-red-500 hover:text-red-400 mb-8 group font-semibold">
@@ -80,7 +80,7 @@
 
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-green-600/20 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-gas-pump text-green-500"></i>
+                    <i class="fas fa-gas-pump text-green-500">{{ car.fuel_type }}</i>
                   </div>
                   <div>
                     <p class="text-gray-400 text-xs uppercase">Fuel</p>
