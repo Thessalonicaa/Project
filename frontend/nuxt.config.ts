@@ -1,4 +1,12 @@
 export default defineNuxtConfig({
+  ssr: true,
+  
+  runtimeConfig: {
+    public: {
+      apiBase: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:5000'
+    }
+  },
+
   css: ['~/assets/css/main.css'],
 
   postcss: {
@@ -23,5 +31,6 @@ export default defineNuxtConfig({
   // กำหนดค่า build
   build: {
     transpile: ['vue-router']
+
   }
 })
