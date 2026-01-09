@@ -187,7 +187,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 import { useSmartBack } from '~/composables/useSmartBack'
@@ -218,11 +218,35 @@ onMounted(() => {
     username.value = localStorage.getItem('username') || ''
     loadProfileImage()
     updateCartCount()
+    
+    // Watch for cart changes every 500ms
+    const cartWatchInterval = setInterval(() => {
+      updateCartCount()
+    }, 500)
+    
     // Poll for profile image updates every 2 seconds
-    setInterval(() => {
+    const profileWatchInterval = setInterval(() => {
       loadProfileImage()
     }, 2000)
+    
+    // Listen to storage changes from other tabs
+    window.addEventListener('storage', (e) => {
+      if (e.key && e.key.startsWith('cart_')) {
+        updateCartCount()
+      }
+    })
+    
+    // Cleanup intervals on unmount
+    return () => {
+      clearInterval(cartWatchInterval)
+      clearInterval(profileWatchInterval)
+    }
   }
+})
+
+// Watch route changes to update cart count
+watch(() => route.path, () => {
+  updateCartCount()
 })
 
 // Fetch profile image from API
@@ -263,10 +287,23 @@ const closeMenu = () => {
 }
 
 const updateCartCount = () => {
-  const username = localStorage.getItem('username')
-  const cartKey = `cart_${username}`
+  if (!process.client) return
+  
+  const currentUsername = localStorage.getItem('username')
+  if (!currentUsername) {
+    cartCount.value = 0
+    return
+  }
+  
+  const cartKey = `cart_${currentUsername}`
   const cart = localStorage.getItem(cartKey)
-  cartCount.value = cart ? JSON.parse(cart).length : 0
+  
+  try {
+    cartCount.value = cart ? JSON.parse(cart).length : 0
+  } catch (error) {
+    console.error('Error parsing cart:', error)
+    cartCount.value = 0
+  }
 }
 
 const searchCars = async () => {

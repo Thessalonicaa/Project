@@ -9,6 +9,7 @@ try:
     from routes.auth import auth_bp
     from routes.orders import orders_bp
     from routes.messages import messages_bp  # Import messages blueprint
+    from routes.admin_routes import admin_bp  # Import admin blueprint
     HAS_ORDERS = True
 except ImportError as e:
     print(f"Warning: Could not import all blueprints: {e}")
@@ -16,6 +17,7 @@ except ImportError as e:
         from routes.cars import cars_bp
         from routes.auth import auth_bp
         from routes.messages import messages_bp  # Import messages blueprint
+        from routes.admin_routes import admin_bp  # Import admin blueprint
         HAS_ORDERS = False
     except ImportError as e2:
         print(f"Error importing core blueprints: {e2}")
@@ -38,6 +40,7 @@ connect(
 app.register_blueprint(cars_bp, url_prefix="/api")
 app.register_blueprint(auth_bp, url_prefix="/api")
 app.register_blueprint(messages_bp)  # Register messages blueprint
+app.register_blueprint(admin_bp)  # Register admin blueprint with /api/admin prefix
 
 if HAS_ORDERS:
     app.register_blueprint(orders_bp, url_prefix="/api")

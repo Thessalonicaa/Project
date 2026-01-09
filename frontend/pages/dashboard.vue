@@ -118,9 +118,26 @@
           </div>
         </div>
 
-        <div v-if="sellerCars.length === 0" class="text-center py-12">
-          <i class="fas fa-inbox text-6xl text-gray-600 mb-4"></i>
-          <p class="text-gray-400 text-lg">No cars listed yet</p>
+        <div v-if="sellerCars.length === 0" class="text-center py-16">
+          <i class="fas fa-inbox text-8xl text-gray-600 mb-6 opacity-60"></i>
+          <p class="text-gray-400 text-xl font-semibold mb-2">No cars listed yet</p>
+          <p class="text-gray-500 text-sm mb-8">Start selling your vehicles today!</p>
+          
+          <!-- Register as Seller Button (Show only if not a seller) -->
+          <div v-if="!isSeller" class="flex flex-col items-center gap-4">
+            <NuxtLink 
+              to="/Register-seller" 
+              class="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r text-white font-bold rounded-xl transition-all transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-red-500/50 overflow-hidden"
+            >
+              <span class="relative z-10 flex items-center gap-2">
+                <i class="fas fa-crown"></i>
+                Register as Seller
+                <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+              </span>
+              <div class="absolute inset-0 bg-gradient-to-r from-red-700 to-red-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </NuxtLink>
+            <p class="text-gray-500 text-xs">Unlock the ability to list and sell vehicles</p>
+          </div>
         </div>
 
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

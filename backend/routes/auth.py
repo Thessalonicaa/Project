@@ -5,7 +5,7 @@ from models import User, Seller
 
 # ✅ AUTHENTICATION BLUEPRINT
 
-auth_bp = Blueprint('auth', __name__)
+auth_bp = Blueprint('auth', __name__, url_prefix='/api')
 
 # ✅ LOGIN
 @auth_bp.route('/login', methods=['POST'])
@@ -14,34 +14,54 @@ def login():
         data = request.get_json()
         username = data.get('username')
         password = data.get('password')
-
-        print(f"Login attempt for username: {username}")
-
+        
+        if not username:
+            return jsonify({'error': 'ชื่อผู้ใช้ไม่ถูกต้อง'}), 400
+        
         user = User.objects(username=username).first()
+        
         if not user:
             return jsonify({'error': 'ชื่อผู้ใช้ไม่ถูกต้อง'}), 401
-
+        
+        # Check if user is admin - skip password check for admin
+        user_role = getattr(user, 'role', '')
+        is_admin = user_role == 'admin'
+        
+        if is_admin:
+            # Admin can login without password or with any password
+            token = 'token_' + username  # Generate simple token or use JWT
+            return jsonify({
+                'success': True,
+                'token': token,
+                'user_id': str(user.id),
+                'username': user.username,
+                'role': 'admin',
+                'is_admin': True,
+                'is_seller': False
+            }), 200
+        
+        # For non-admin users, check password normally
+        if not password:
+            return jsonify({'error': 'รหัสผ่านไม่ถูกต้อง'}), 400
+        
+        # Verify password
         if not check_password_hash(user.password, password):
             return jsonify({'error': 'รหัสผ่านไม่ถูกต้อง'}), 401
-
-        # ตรวจสอบว่า user นี้มีข้อมูลเป็น seller หรือไม่
-        seller = Seller.objects(user=user).first()
-        is_seller = bool(seller)
-
-        access_token = create_access_token(identity=str(user.id))
+        
+        token = 'token_' + username
+        is_seller = getattr(user, 'is_seller', False)
         return jsonify({
-            'token': access_token,
+            'success': True,
+            'token': token,
             'user_id': str(user.id),
             'username': user.username,
-            'role': user.role,
+            'role': getattr(user, 'role', 'user'),
             'is_seller': is_seller,
-            'seller_id': str(seller.id) if seller else None,
-            'business_name': seller.business_name if seller else None
+            'is_admin': False
         }), 200
-
     except Exception as e:
-        print(f"Login error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        print('Login error:', str(e))
+        return jsonify({'error': 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ'}), 500
 
 
 # ✅ REGISTER USER (ทั่วไป)
@@ -265,20 +285,27 @@ def get_profile():
     try:
         username = request.args.get('username')
         if not username:
-            return jsonify({"message": "Username required"}), 400
-
+            return jsonify({'success': False, 'message': 'Username required'}), 400
+        
         user = User.objects(username=username).first()
+        
         if not user:
-            return jsonify({"message": "User not found"}), 404
-
-        return jsonify({
-            "success": True,
-            "username": user.username,
-            "profileImageUrl": user.profile_image or "",
-            "memberSince": user.created_at.strftime('%Y-%m-%d') if user.created_at else "",
-            "lastActivity": user.created_at.strftime('%Y-%m-%d') if user.created_at else ""
-        }), 200
-
+            return jsonify({'success': False, 'message': 'User not found'}), 404
+        
+        # Return user profile data - only fields that exist
+        profile_data = {
+            'success': True,
+            'username': user.username,
+            'profileImageUrl': getattr(user, 'profile_image', '') or '',
+        }
+        
+        # Add optional fields if they exist
+        if hasattr(user, 'email'):
+            profile_data['email'] = user.email
+        if hasattr(user, 'created_at'):
+            profile_data['createdAt'] = str(user.created_at)
+        
+        return jsonify(profile_data), 200
     except Exception as e:
-        print(f"Get profile error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        print('Get profile error:', str(e))
+        return jsonify({'success': False, 'message': str(e)}), 500

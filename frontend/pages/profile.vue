@@ -39,14 +39,6 @@
             <p class="text-xl text-gray-400 mb-4">
               {{ isSeller ? 'Seller Account' : 'User Account' }}
             </p>
-            <!-- Back button when viewing others -->
-            <button 
-              v-if="!isOwnProfile"
-              @click="router.back()"
-              class="px-6 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-red-400 rounded-lg transition-all duration-300 transform hover:scale-105"
-            >
-             
-            </button>
           </div>
 
           <!-- Quick Stats -->

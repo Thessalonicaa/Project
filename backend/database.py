@@ -5,7 +5,9 @@ from datetime import datetime
 class User(Document):
     username = StringField(unique=True, required=True)
     password = StringField(required=True)
-    role = StringField(default='user')  # 'user' or 'seller'
+    role = StringField(default='user')  # 'user', 'seller', or 'admin'
+    is_seller = BooleanField(default=False)
+    is_admin = BooleanField(default=False)
     profile_image = StringField()  # Base64 image data
     created_at = DateTimeField(default=datetime.utcnow)
     

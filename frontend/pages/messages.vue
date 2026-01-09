@@ -1,6 +1,6 @@
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-950  flex items-center justify-center p-4">
+  <div class="min-h-screen bg-gradient-to-br from-gray-950 flex items-center justify-center p-4">
     <!-- Main Container -->
     <div class="w-full max-w-7xl h-[85vh] bg-gray-900/80 backdrop-blur-xl rounded-3xl border border-gray-800/50 shadow-2xl flex overflow-hidden">
       
@@ -49,7 +49,7 @@
             <!-- Last Message Preview -->
             <p class="text-sm text-gray-400 truncate">{{ conversation.lastMessage }}</p>
             <!-- Time -->
-            <p class="text-xs text-gray-500 mt-1">{{ formatTime(conversation.lastMessageTime) }}</p>
+            <p class="text-xs text-gray-500 mt-1">{{ formatTime(conversation.lastMessageTime) || timeUpdateTrigger }}</p>
           </div>
 
           <!-- Empty State -->
@@ -107,7 +107,7 @@
                 ]"
               >
                 <p class="break-words">{{ message.text }}</p>
-                <p class="text-xs mt-2 opacity-70">{{ formatTime(message.timestamp) }}</p>
+                <p class="text-xs mt-2 opacity-70">{{ formatTime(message.timestamp) || timeUpdateTrigger }}</p>
               </div>
             </div>
             <div ref="messagesEnd"></div>
@@ -160,6 +160,11 @@ const newMessage = ref('')
 const searchQuery = ref('')
 const messagesEnd = ref(null)
 const loading = ref(false)
+const timeUpdateTrigger = ref(0) // Trigger for time updates
+
+const goBack = () => {
+  router.back()
+}
 
 const conversations = ref([])
 const messagesByConversation = ref({})
@@ -181,18 +186,28 @@ const filteredSellers = computed(() => {
 })
 
 const formatTime = (timestamp) => {
+  if (!timestamp) return 'now'
+  
   const date = new Date(timestamp)
   const now = new Date()
-  const diffMs = now - date
+  
+  // ถ้า timestamp ไม่ถูกต้อง ให้แสดง 'just now'
+  if (isNaN(date.getTime())) return 'just now'
+  
+  const diffMs = now.getTime() - date.getTime()
+  const diffSecs = Math.floor(diffMs / 1000)
   const diffMins = Math.floor(diffMs / 60000)
   const diffHours = Math.floor(diffMs / 3600000)
   const diffDays = Math.floor(diffMs / 86400000)
 
-  if (diffMins < 1) return 'Just now'
+  // ถ้าเพิ่งเกิน 10 วินาที = "just now"
+  if (diffSecs < 10) return 'just now'
+  if (diffMins < 1) return `${diffSecs}s ago`
   if (diffMins < 60) return `${diffMins}m ago`
   if (diffHours < 24) return `${diffHours}h ago`
   if (diffDays < 7) return `${diffDays}d ago`
   
+  // แสดงวันที่เต็ม
   return date.toLocaleDateString('th-TH', {
     month: 'short',
     day: 'numeric',
@@ -393,6 +408,11 @@ const pollMessages = setInterval(() => {
   fetchConversations()
 }, 3000)
 
+// Update time display every 30 seconds
+const updateTimeDisplay = setInterval(() => {
+  timeUpdateTrigger.value += 1
+}, 30000)
+
 onMounted(async () => {
   currentUsername.value = localStorage.getItem('username') || 'User'
   currentUserId.value = localStorage.getItem('userId') || ''
@@ -400,17 +420,37 @@ onMounted(async () => {
   // Fetch conversations
   await fetchConversations()
   
-  // Check if coming from car detail page with seller parameter
-  let sellerParam = route.query.seller
-  let carData = null
+  // Check if coming from cart checkout
+  let sellerParam = null
+  let autoMessage = null
   
-  // Check sessionStorage for car data and seller
-  if (sessionStorage.getItem('contactSeller')) {
+  // Priority 1: Check sessionStorage from cart
+  if (sessionStorage.getItem('isFromCart') === 'true') {
+    sellerParam = sessionStorage.getItem('contactSeller')
+    autoMessage = sessionStorage.getItem('contactSellerMessage')
+    console.log('From Cart - Seller:', sellerParam, 'Message:', autoMessage)
+    
+    // Clear sessionStorage
+    sessionStorage.removeItem('isFromCart')
+    sessionStorage.removeItem('contactSeller')
+    sessionStorage.removeItem('contactSellerMessage')
+    sessionStorage.removeItem('contactCarData')
+  }
+  // Priority 2: Check URL parameter
+  else if (route.query.seller) {
+    sellerParam = route.query.seller
+  }
+  
+  // Priority 3: Check sessionStorage from car detail page
+  if (!sellerParam && sessionStorage.getItem('contactSeller')) {
     sellerParam = sessionStorage.getItem('contactSeller')
     const carDataJson = sessionStorage.getItem('contactCarData')
     if (carDataJson) {
       try {
-        carData = JSON.parse(carDataJson)
+        const carData = JSON.parse(carDataJson)
+        if (carData.brand && carData.model) {
+          autoMessage = `สวัสดีครับ/ค่ะ ต้องการสอบถามข้อมูลเกี่ยวกับสินค้านี้\n\n📍 ${carData.brand} ${carData.model}\n📅 ปี ${carData.year}\n💰 ฿${new Intl.NumberFormat('th-TH').format(carData.price)}`
+        }
       } catch (error) {
         console.error('Error parsing car data:', error)
       }
@@ -418,6 +458,7 @@ onMounted(async () => {
     // Clear sessionStorage after reading
     sessionStorage.removeItem('contactSeller')
     sessionStorage.removeItem('contactCarData')
+    sessionStorage.removeItem('contactSellerMessage')
   }
   
   if (sellerParam) {
@@ -432,19 +473,13 @@ onMounted(async () => {
     if (conversation) {
       await selectConversation(conversation)
       
-      // If car data is provided, send automatic message
-      if (carData) {
-        // Build automatic message
-        const autoMessage = `สวัสดีครับ/ค่ะ ต้องการสอบถามข้อมูลเกี่ยวกับสินค้านี้\n\n📍 ${carData.brand} ${carData.model}\n📅 ปี ${carData.year}\n💰 ฿${new Intl.NumberFormat('th-TH').format(carData.price)}`
-        
-        // Set the message in the input
+      // Send auto message if exists
+      if (autoMessage) {
         newMessage.value = autoMessage
-        
-        // Auto-send after a short delay
         await nextTick()
         setTimeout(() => {
           sendMessage()
-        }, 500)
+        }, 300)
       }
     }
   }
@@ -454,6 +489,7 @@ onMounted(async () => {
 // Cleanup polling interval
 onBeforeUnmount(() => {
   clearInterval(pollMessages)
+  clearInterval(updateTimeDisplay)
 })
 
 import { onBeforeUnmount } from 'vue'

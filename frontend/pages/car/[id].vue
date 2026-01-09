@@ -1,11 +1,28 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br bg-gray-950 text-white p-6">
     <div class="max-w-7xl mx-auto">
-      <!-- Back Button -->
-      <NuxtLink to="/CarList" class="inline-flex items-center gap-2 text-red-500 hover:text-red-400 mb-8 group font-semibold">
-        <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
-        Back to Cars
-      </NuxtLink>
+      <!-- Back Button with Animation -->
+      <div class="mb-8 flex items-center gap-4">
+        <button 
+          @click="goBack"
+          class="group relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br border-red-500/50 hover:border-red-400 hover:from-red-600/40 hover:to-red-700/40 transition-all duration-300 shadow-lg hover:shadow-red-500/30"
+          title="Go back"
+        >
+          <i class="fas fa-arrow-left text-red-500 group-hover:text-red-400 group-hover:-translate-x-1 transition-all duration-300"></i>
+        </button>
+        
+        <NuxtLink 
+          to="/CarList" 
+          class="inline-flex items-center gap-2 text-red-500 hover:text-red-400 font-semibold group transition-all duration-300"
+        >
+          <span class="relative overflow-hidden">
+            
+            <span class="absolute inset-0 flex items-center translate-x-full group-hover:translate-x-0 transition-transform duration-300 text-red-400">
+              <i class="fas fa-arrow-right ml-2"></i> Browse More
+            </span>
+          </span>
+        </NuxtLink>
+      </div>
 
       <div v-if="loading" class="text-center py-16">
         <div class="inline-flex flex-col items-center">
@@ -388,6 +405,10 @@ const lastActivity = ref('')
 const carsListed = ref(0)
 const selectedImageIndex = ref(0)
 const isOnline = ref(true)
+
+const goBack = () => {
+  router.back()
+}
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('th-TH').format(price)
