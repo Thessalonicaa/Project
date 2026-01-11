@@ -25,7 +25,7 @@ watch(
     const isAuthPage = ['/login', '/register', '/register-seller'].includes(newPath)
     
     if (!token && !isAuthPage) {
-      router.push('/login')
+      router.push('/log/login')
     } else if (token && isAuthPage) {
       router.push('/')
     }
