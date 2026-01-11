@@ -1,5 +1,5 @@
 <template>
-  <nav
+  <Nav
     class="bg-black/95 backdrop-blur-md text-white px-4 md:px-6 py-3 flex items-center shadow-lg transition-all duration-500 relative z-50"
   >
     <!-- หน้า login/register -->
@@ -172,7 +172,7 @@
         </div>
       </div>
     </template>
-  </nav>
+  </Nav>
 
   <!-- Teleport modal -->
   <teleport to="body">
