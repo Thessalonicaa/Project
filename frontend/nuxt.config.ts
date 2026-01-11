@@ -9,7 +9,7 @@ export default defineNuxtConfig({
     ],
   },
   // ...existing code...
-})
+
   ssr: true,
   
   runtimeConfig: {
