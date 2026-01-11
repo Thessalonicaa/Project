@@ -1,4 +1,15 @@
 export default defineNuxtConfig({
+  // ...existing code...
+  components: {
+    dirs: [
+      {
+        path: '~/components',
+        pathPrefix: false,
+      },
+    ],
+  },
+  // ...existing code...
+})
   ssr: true,
   
   runtimeConfig: {
