@@ -2,12 +2,25 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import check_password_hash, generate_password_hash
 from models import User, Seller
-
-# ✅ AUTHENTICATION BLUEPRINT
-
+#  AUTHENTICATION BLUEPRINT
 auth_bp = Blueprint('auth', __name__, url_prefix='/api')
 
-# ✅ LOGIN
+
+#  CHECK USERNAME AVAILABILITY
+@auth_bp.route('/check-username/<username>', methods=['GET'])
+def check_username(username):
+    try:
+        user = User.objects(username=username).first()
+        return jsonify({
+            'exists': bool(user),
+            'message': 'Username already taken' if user else 'Username available'
+        }), 200
+    except Exception as e:
+        print(f'Check username error: {str(e)}')
+        return jsonify({'error': str(e)}), 500
+
+
+#  LOGIN
 @auth_bp.route('/login', methods=['POST'])
 def login():
     try:
@@ -29,7 +42,7 @@ def login():
         
         if is_admin:
             # Admin can login without password or with any password
-            token = 'token_' + username  # Generate simple token or use JWT
+            token = create_access_token(identity=str(user.id))
             return jsonify({
                 'success': True,
                 'token': token,
@@ -48,7 +61,7 @@ def login():
         if not check_password_hash(user.password, password):
             return jsonify({'error': 'รหัสผ่านไม่ถูกต้อง'}), 401
         
-        token = 'token_' + username
+        token = create_access_token(identity=str(user.id))
         is_seller = getattr(user, 'is_seller', False)
         return jsonify({
             'success': True,
@@ -64,7 +77,7 @@ def login():
         return jsonify({'error': 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ'}), 500
 
 
-# ✅ REGISTER USER (ทั่วไป)
+#  REGISTER USER (ทั่วไป)
 @auth_bp.route('/register', methods=['POST'])
 def register():
     try:
@@ -83,7 +96,7 @@ def register():
         return jsonify({'error': str(e)}), 500
 
 
-# ✅ REGISTER SELLER (ผู้ขาย)
+#  REGISTER SELLER (ผู้ขาย)
 @auth_bp.route('/register/seller', methods=['POST'])
 @jwt_required()
 def register_seller():
@@ -115,27 +128,32 @@ def register_seller():
             user=user,
             username=user.username,
             email=data['email'],
-            # เก็บ password เดิมจาก user (hashed)
             password=user.password,
             business_name=data['business_name'],
             contact_info=data['contact_info'],
             phonenumber=data.get('phonenumber'),
-            role='seller'
+            # ✅ role จะ default เป็น 'seller' จาก model definition
+            # ❌ ไม่ต้อง set role ที่นี่ หากมี BooleanField เข้ามา
         )
         seller.save()
 
         # อัปเดต role ของ User ให้เป็น seller
         user.role = 'seller'
+        user.is_seller = True
         user.save()
 
-        return jsonify({"message": "Seller registered successfully"}), 201
+        return jsonify({
+            "message": "Seller registered successfully",
+            "success": True,
+            "seller_id": str(seller.id),
+            "user_id": str(user.id)
+        }), 201
 
     except Exception as e:
         print(f"Register seller error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-
-# ✅ CHECK SELLER STATUS (สถานะผู้ขาย)
+#  CHECK SELLER STATUS (สถานะผู้ขาย)
 @auth_bp.route('/check-seller-status/<user_id>', methods=['GET'])
 @jwt_required()
 def check_seller_status(user_id):
@@ -157,7 +175,7 @@ def check_seller_status(user_id):
         return jsonify({'error': str(e)}), 500
 
 
-# ✅ POST CAR LISTING
+#  POST CAR LISTING
 @auth_bp.route('/cars', methods=['POST'])
 @jwt_required()
 def post_car():
@@ -207,7 +225,8 @@ def post_car():
             fuel_type=data.get('fuel_type'),
             transmission=data.get('transmission'),
             car_type=data.get('car_type'),
-            images=data.get('images', [])
+            images=data.get('images', []),
+            video_url=data.get('video_url', '')
         )
         car.save()
 
@@ -222,7 +241,7 @@ def post_car():
         return jsonify({'error': str(e)}), 500
 
 
-# ✅ GET SELLER INFO
+#  GET SELLER INFO
 @auth_bp.route('/seller-info/<username>', methods=['GET'])
 def get_seller_info(username):
     try:
@@ -247,7 +266,7 @@ def get_seller_info(username):
         return jsonify({'error': str(e)}), 500
 
 
-# ✅ UPDATE PROFILE IMAGE
+#  UPDATE PROFILE IMAGE
 @auth_bp.route('/update-profile-image', methods=['POST'])
 @jwt_required()
 def update_profile_image():
@@ -279,7 +298,7 @@ def update_profile_image():
         return jsonify({'error': str(e)}), 500
 
 
-# ✅ GET PROFILE (with image)
+#  GET PROFILE (with image)
 @auth_bp.route('/get-profile', methods=['GET'])
 def get_profile():
     try:

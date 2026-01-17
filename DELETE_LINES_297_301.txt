@@ -1,0 +1,23 @@
+
+# REMOVE ALL LINES FROM 297-301 IN cars.py
+# 
+# EXACT STEPS:
+# 1. Open e:\ProjectFainal\backend\routes\cars.py in VS Code
+# 2. Press Ctrl+G to open "Go to Line"
+# 3. Type: 297
+# 4. Press Enter
+# 5. Your cursor is now at line 297
+# 6. Select from line 297 to line 301 (5 lines total)
+#    - Click at start of line 297
+#    - Hold Shift
+#    - Click at end of line 301
+# 7. Press Delete or Backspace
+# 8. Save file (Ctrl+S)
+# 9. Run: python app.py
+#
+# The lines to delete are:
+# Line 297:     """
+# Line 298:     except Exception as e:
+# Line 299:         print(f"Get car error: {str(e)}")
+# Line 300:         return jsonify({'error': str(e)}), 500
+# Line 301: (empty line)

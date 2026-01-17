@@ -1,7 +1,7 @@
 from mongoengine import Document, StringField, IntField, FloatField, ListField, ReferenceField, DateTimeField, BooleanField
 from datetime import datetime
 
-# ✅ USER MODEL
+#  USER MODEL
 class User(Document):
     username = StringField(unique=True, required=True)
     password = StringField(required=True)
@@ -16,24 +16,27 @@ class User(Document):
         'indexes': ['username']
     }
 
-# ✅ SELLER MODEL
+#  SELLER MODEL
 class Seller(Document):
-    user = ReferenceField(User, required=True)
-    username = StringField(required=True)
+    user = ReferenceField('User', required=True, unique=True)
+    username = StringField(required=True, unique=True)
+    business_name = StringField(required=True)
     email = StringField(required=True, unique=True)
     password = StringField(required=True)
-    business_name = StringField()
-    contact_info = StringField()
     phonenumber = StringField()
-    role = StringField(default='seller')
+    contact_info = StringField()
+    description = StringField()
+    role = StringField(default='Seller')  # ← ADD THIS LINE
+    is_active = BooleanField(default=True)  # ← ADD THIS LINE
     created_at = DateTimeField(default=datetime.utcnow)
+    updated_at = DateTimeField(default=datetime.utcnow)
     
     meta = {
         'collection': 'sellers',
-        'indexes': ['email', 'user']
+        'indexes': ['user', 'username', 'email']
     }
 
-# ✅ CAR MODEL
+#  CAR MODEL
 class Car(Document):
     seller = ReferenceField(Seller, required=True)
     brand = StringField(required=True)
@@ -44,10 +47,15 @@ class Car(Document):
     price = FloatField(required=True)
     images = ListField(StringField())
     
-    # ✅ NEW FIELDS - Fuel Type, Transmission, Car Type
+    #  FIELDS - Fuel Type, Transmission, Car Type
     fuel_type = StringField(default='Petrol', choices=['Petrol', 'Diesel', 'Hybrid', 'Electric'])
     transmission = StringField(default='Automatic', choices=['Automatic', 'Manual'])
     car_type = StringField(default='Sedan', choices=['Sedan', 'SUV', 'Pickup', 'Van', 'Sports'])
+    
+    # Additional fields
+    sold_out = BooleanField(default=False)
+    views = IntField(default=0)
+    video_url = StringField()
     
     created_at = DateTimeField(default=datetime.utcnow)
     

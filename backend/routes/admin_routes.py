@@ -62,18 +62,19 @@ def get_cars():
     try:
         cars = Car.objects()
         cars_list = []
-        for c in cars:
+        for car in cars:
             cars_list.append({
-                '_id': str(c.id),
-                'brand': c.brand,
-                'model': c.model,
-                'year': c.year,
-                'price': c.price,
-                'seller': getattr(c, 'seller', None),
-                'license_plate': getattr(c, 'license_plate', None),
-                'sold_out': getattr(c, 'sold_out', False),
-                'created_at': getattr(c, 'created_at', None),
-                'description': getattr(c, 'description', '')
+                '_id': str(car.id),
+                'brand': car.brand,
+                'model': car.model,
+                'year': car.year,
+                'price': car.price,
+                'seller': str(car.seller.id),
+                'license_plate': getattr(car, 'license_plate', ''),
+                'sold_out': getattr(car, 'sold_out', False),
+                'created_at': str(getattr(car, 'created_at', '')),
+                'description': getattr(car, 'description', ''),
+                'images': getattr(car, 'images', [])
             })
         return jsonify({'success': True, 'cars': cars_list}), 200
     except Exception as e:
@@ -85,14 +86,14 @@ def get_cars():
 def update_car(car_id):
     try:
         data = request.get_json()
-        c = Car.objects(id=car_id).first()
-        if not c:
+        car = Car.objects(id=car_id).first()
+        if not car:
             return jsonify({'success': False, 'message': 'Car not found'}), 404
         for k, v in data.items():
-            if hasattr(c, k):
-                setattr(c, k, v)
-        c.save()
-        return jsonify({'success': True, 'car': c.to_mongo().to_dict()}), 200
+            if hasattr(car, k):
+                setattr(car, k, v)
+        car.save()
+        return jsonify({'success': True, 'message': 'Car updated'}), 200
     except Exception as e:
         print('Error update car', e)
         return jsonify({'success': False, 'message': 'Error updating car'}), 500
@@ -101,10 +102,10 @@ def update_car(car_id):
 @admin_bp.route('/cars/<car_id>', methods=['DELETE'])
 def delete_car(car_id):
     try:
-        c = Car.objects(id=car_id).first()
-        if not c:
+        car = Car.objects(id=car_id).first()
+        if not car:
             return jsonify({'success': False, 'message': 'Car not found'}), 404
-        c.delete()
+        car.delete()
         return jsonify({'success': True, 'message': 'Car deleted'}), 200
     except Exception as e:
         print('Error delete car', e)

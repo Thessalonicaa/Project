@@ -1,8 +1,23 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-950 to-gray-900 text-white p-8">
-    <div class="max-w-6xl mx-auto">
+  <div class="admin-index-page min-h-screen bg-gray-950 text-white p-8 relative overflow-hidden">
+        <!-- Beams Background -->
+    <div class="beams-background">
+      <Beams
+        :beamWidth="3"
+        :beamHeight="25"
+        :beamNumber="20"
+        lightColor="#ff3c03"
+        :speed="2"
+        :noiseIntensity="1.75"
+        :scale="0.2"
+        :rotation="30"
+        :width="1920"
+        :height="1080"
+      />
+    </div>           
+    <div class="max-w-6xl mx-auto relative z-10">
       <!-- Header -->
-      <div class="text-center mb-12">
+      <div class="text-center mb-12 animate-slide-down">
         <h1 class="text-5xl font-extrabold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent mb-2">
           <i class="fas fa-shield-alt mr-3"></i>Admin Dashboard
         </h1>
@@ -70,7 +85,7 @@
           <p class="text-4xl font-bold text-red-400">{{ stats.cars }}</p>
         </div>
         <div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
-          <p class="text-gray-400 text-sm uppercase font-semibold mb-2">Last Updated</p>
+          <p class="text-gray-400 text-sm uppercase font-semibold mb-2">Time</p>
           <p class="text-lg font-bold text-green-400">{{ lastUpdate }}</p>
         </div>
       </div>
@@ -80,6 +95,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import Beams from '~/components/Beams.vue'
 
 const isAdmin = ref(false)
 const stats = ref({ users: 0, cars: 0 })
@@ -109,5 +125,38 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Tailwind handles all styling */
+.admin-index-page {
+  position: relative;
+}
+
+.beams-background {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.grid > * {
+  animation: fadeIn 0.8s ease-out both;
+}
+
+.grid > *:nth-child(2) { animation-delay: 0.2s; }
+.grid > *:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 </style>

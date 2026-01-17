@@ -1,5 +1,20 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br bg-gray-950 text-white p-6">
+  <div class="min-h-screen bg-gray-950 text-white p-6 relative overflow-hidden">
+    <div class="beams-background">
+      <Beams
+        :beamWidth="3"
+        :beamHeight="25"
+        :beamNumber="20"
+        lightColor="#ff3c03"
+        :speed="2"
+        :noiseIntensity="1.75"
+        :scale="0.2"
+        :rotation="30"
+        :width="1920"
+        :height="1080"
+      />
+    </div>
+
     <div class="max-w-7xl mx-auto">
       <!-- Back Button with Animation -->
       <div class="mb-8 flex items-center gap-4">
@@ -60,6 +75,37 @@
               <div v-if="car.sold_out" class="absolute top-6 left-6 bg-red-600/90 backdrop-blur-md px-4 py-2 rounded-full text-white text-sm font-bold border border-red-400/20">
                 <i class="fas fa-check-circle mr-2"></i>SOLD
               </div>
+
+              <!-- Arrow Navigation Buttons -->
+              <button
+                v-if="car.images && car.images.length > 1"
+                @click="previousImage"
+                class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 z-10"
+              >
+                <i class="fas fa-chevron-left text-xl"></i>
+              </button>
+
+              <button
+                v-if="car.images && car.images.length > 1"
+                @click="nextImage"
+                class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 z-10"
+              >
+                <i class="fas fa-chevron-right text-xl"></i>
+              </button>
+
+              <!-- Image Indicators Dots -->
+              <div v-if="car.images && car.images.length > 1" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
+                <button
+                  v-for="(image, index) in car.images"
+                  :key="index"
+                  @click="selectedImageIndex = index"
+                  :class="[
+                    'w-2 h-2 rounded-full transition-all duration-300',
+                    selectedImageIndex === index ? 'bg-red-500 w-8' : 'bg-white/50 hover:bg-white/80'
+                  ]"
+                  :title="`Image ${index + 1}`"
+                />
+              </div>
             </div>
 
             <!-- Car Header with Gradient -->
@@ -97,7 +143,7 @@
 
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-green-600/20 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-gas-pump text-green-500">{{ car.fuel_type }}</i>
+                    <i class="fas fa-gas-pump text-green-500"></i>
                   </div>
                   <div>
                     <p class="text-gray-400 text-xs uppercase">Fuel</p>
@@ -126,19 +172,63 @@
                 Specifications
               </h2>
               
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid grid-cols-2 gap-4 space-y-2">
+            
                 <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
                   <p class="text-gray-400 text-sm mb-1">Car Type</p>
                   <p class="text-white font-bold">{{ car.car_type || 'N/A' }}</p>
                 </div>
+                <!-- Row 3 -->
                 <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
-                  <p class="text-gray-400 text-sm mb-1">Fuel Type</p>
-                  <p class="text-white font-bold">{{ car.fuel_type || 'N/A' }}</p>
+                  <p class="text-gray-400 text-sm mb-1">Engine Size</p>
+                  <p class="text-white font-bold">{{ car.engine_size || 'N/A' }}</p>
                 </div>
                 <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
-                  <p class="text-gray-400 text-sm mb-1">Transmission</p>
-                  <p class="text-white font-bold">{{ car.transmission || 'N/A' }}</p>
+                  <p class="text-gray-400 text-sm mb-1">Gas System</p>
+                  <p class="text-white font-bold">{{ car.gas_system || 'None' }}</p>
                 </div>
+
+                <!-- Row 4 -->
+                <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+                  <p class="text-gray-400 text-sm mb-1">Mileage</p>
+                  <p class="text-white font-bold">{{ car.mileage ? formatMileage(car.mileage) + ' km' : 'N/A' }}</p>
+                </div>
+                <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+                  <p class="text-gray-400 text-sm mb-1">Color</p>
+                  <p class="text-white font-bold">{{ car.color || 'N/A' }}</p>
+                </div>
+
+                <!-- Row 5 - Dynamic Fields -->
+                <div v-if="car.car_type === 'MPV' && car.mpv_size" class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+                  <p class="text-gray-400 text-sm mb-1">MPV Size</p>
+                  <p class="text-white font-bold">{{ car.mpv_size }}</p>
+                </div>
+                <div v-if="car.car_type === 'Convertible' && car.convertible_top" class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+                  <p class="text-gray-400 text-sm mb-1">Top Type</p>
+                  <p class="text-white font-bold">{{ car.convertible_top }}</p>
+                </div>
+                <div v-if="car.car_type === 'Convertible' && car.convertible_seats" class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+                  <p class="text-gray-400 text-sm mb-1">Seats</p>
+                  <p class="text-white font-bold">{{ car.convertible_seats }}</p>
+                </div>
+                <div v-if="car.car_type === 'Van' && car.van_type" class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+                  <p class="text-gray-400 text-sm mb-1">Van Type</p>
+                  <p class="text-white font-bold">{{ car.van_type }}</p>
+                </div>
+                <div v-if="car.car_type === 'SUV' && car.suv_seats" class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+                  <p class="text-gray-400 text-sm mb-1">Seat Capacity</p>
+                  <p class="text-white font-bold">{{ car.suv_seats }}</p>
+                </div>
+                <div v-if="car.car_type === 'Pickup' && car.pickup_cab" class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+                  <p class="text-gray-400 text-sm mb-1">Cab Type</p>
+                  <p class="text-white font-bold">{{ car.pickup_cab }}</p>
+                </div>
+                <div v-if="car.car_type === 'Pickup' && car.pickup_body_type" class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
+                  <p class="text-gray-400 text-sm mb-1">Body Type</p>
+                  <p class="text-white font-bold">{{ car.pickup_body_type }}</p>
+                </div>
+
+                <!-- Row 6 -->
                 <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
                   <p class="text-gray-400 text-sm mb-1">Condition</p>
                   <p class="text-white font-bold">{{ car.sold_out ? 'Sold' : 'Available' }}</p>
@@ -405,6 +495,56 @@ const lastActivity = ref('')
 const carsListed = ref(0)
 const selectedImageIndex = ref(0)
 const isOnline = ref(true)
+let autoSlideInterval = null
+
+const nextImage = () => {
+  if (car.value && car.value.images && car.value.images.length > 0) {
+    selectedImageIndex.value = (selectedImageIndex.value + 1) % car.value.images.length
+    resetAutoSlide()
+  }
+}
+
+const previousImage = () => {
+  if (car.value && car.value.images && car.value.images.length > 0) {
+    selectedImageIndex.value = (selectedImageIndex.value - 1 + car.value.images.length) % car.value.images.length
+    resetAutoSlide()
+  }
+}
+
+const startAutoSlide = () => {
+  if (car.value && car.value.images && car.value.images.length > 1) {
+    autoSlideInterval = setInterval(() => {
+      selectedImageIndex.value = (selectedImageIndex.value + 1) % car.value.images.length
+    }, 5000) // Change image every 5 seconds
+  }
+}
+
+const resetAutoSlide = () => {
+  if (autoSlideInterval) {
+    clearInterval(autoSlideInterval)
+  }
+  startAutoSlide()
+}
+
+const incrementViewCount = async () => {
+  try {
+    const response = await fetch(`http://localhost:5000/api/cars/${route.params.id}/view`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    const data = await response.json()
+    
+    if (data.success && car.value) {
+      car.value.views = data.views || (car.value.views || 0) + 1
+      console.log('Views updated to:', car.value.views)
+    }
+  } catch (error) {
+    console.error('Error incrementing views:', error)
+  }
+}
 
 const goBack = () => {
   router.back()
@@ -421,6 +561,11 @@ const formatDate = (date) => {
     month: 'short',
     day: 'numeric'
   })
+}
+
+const formatMileage = (mileage) => {
+  if (!mileage) return '0'
+  return mileage.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
 const handleSuccessClose = () => {
@@ -533,8 +678,16 @@ onMounted(async () => {
     
     if (data.success) {
       car.value = data.car
+      console.log('Car data:', car.value)
+      console.log('Engine size:', car.value.engine_size)
+      console.log('Color:', car.value.color)
       
-      // Fetch seller profile image and stats
+      // Start auto-sliding images
+      startAutoSlide()
+      
+      // Increment view count
+      incrementViewCount()
+      
       if (car.value.seller && car.value.seller.username) {
         try {
           const profileRes = await fetch(
@@ -548,13 +701,21 @@ onMounted(async () => {
             lastActivity.value = profileData.lastActivity
           }
           
-          // Fetch seller's cars count
-          const carsRes = await fetch(
-            `http://localhost:5000/api/cars/seller/${car.value.seller.username}`
+          // Fetch seller's cars count using seller-info endpoint
+          const sellerInfoRes = await fetch(
+            `http://localhost:5000/api/seller-info/${car.value.seller.username}`
           )
-          const carsData = await carsRes.json()
-          if (carsData.success) {
-            carsListed.value = carsData.cars.length
+          const sellerInfoData = await sellerInfoRes.json()
+          
+          if (sellerInfoData.success && sellerInfoData.seller) {
+            const sellerId = sellerInfoData.seller.id
+            const carsRes = await fetch(
+              `http://localhost:5000/api/cars?seller_id=${sellerId}`
+            )
+            const carsData = await carsRes.json()
+            if (carsData.success) {
+              carsListed.value = carsData.cars.length
+            }
           }
         } catch (error) {
           console.error('Error fetching seller profile:', error)
@@ -703,4 +864,5 @@ onMounted(async () => {
     opacity: 1;
   }
   
-}</style>
+}
+</style>

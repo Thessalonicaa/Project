@@ -2,7 +2,7 @@ from pymongo import MongoClient
 import os
 
 # MongoDB connection
-MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/car_sales')
+MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/car')
 
 try:
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)

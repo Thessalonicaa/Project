@@ -118,7 +118,7 @@ const goToProfile = () => {
 <style scoped>
 /* Smooth transitions */
 .animate-slide-down-slow {
-  animation: slideDownSlow 2s ease-out;
+  animation: slideDownSlow 5s ease-out;
 }
 
 @keyframes slideDownSlow {

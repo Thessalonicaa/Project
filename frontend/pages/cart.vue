@@ -1,7 +1,22 @@
 // filepath: e:\ProjectFainal\frontend\pages\cart.vue
 <template>
-  <div class="min-h-screen bg-gray-950 text-white p-6">
-    <div class="max-w-6xl mx-auto">
+  <div class="min-h-screen bg-gray-950 text-white p-6 relative overflow-hidden">
+    <!-- Beams Background -->
+    <div class="beams-background">
+      <Beams
+        :beamWidth="3"
+        :beamHeight="25"
+        :beamNumber="20"
+        lightColor="#ff3c03"
+        :speed="2"
+        :noiseIntensity="1.75"
+        :scale="0.2"
+        :rotation="30"
+        :width="1920"
+        :height="1080"
+      />
+    </div>
+    <div class="max-w-6xl mx-auto relative z-10">
       <!-- Header -->
       <div class="mb-8">
         <div class="flex items-center gap-4 mb-4">
@@ -43,14 +58,14 @@
           <div class="bg-gray-900/80 backdrop-blur-xl rounded-3xl p-8 border border-gray-800/50">
             <h2 class="text-2xl font-bold mb-6">Cart Items ({{ cartItems.length }})</h2>
             
-            <div v-for="(item, index) in cartItems" :key="index" class="bg-gray-800/50 p-6 rounded-2xl border border-gray-700 mb-4">
-              <div class="flex gap-6">
+            <div v-for="(item, index) in cartItems" :key="index" class="bg-gray-800/50 p-6 rounded-2xl border border-gray-700 mb-4 hover:border-red-500/50 transition-all duration-300 group">
+              <div class="flex gap-6 items-start">
                 <!-- Item Image -->
                 <div class="w-32 h-32 flex-shrink-0 rounded-xl overflow-hidden">
                   <img 
                     :src="item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/200x200?text=No+Image'"
                     :alt="item.model"
-                    class="w-full h-full object-cover"
+                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
                 </div>
 
@@ -63,12 +78,16 @@
                 </div>
 
                 <!-- Remove Button -->
-                <button
-                  @click="removeFromCart(index)"
-                  class="text-red-500 hover:text-red-400 transition-colors"
-                >
-                  <i class="fas fa-trash text-2xl"></i>
-                </button>
+                <div class="flex flex-col items-center gap-2">
+                  <button
+                    @click="removeFromCart(index)"
+                    class="group/btn relative w-6 h-6 rounded-full bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold transition-all transform hover:scale-110 active:scale-95 shadow-lg hover:shadow-red-500/50 flex items-center justify-center"
+                    title="Remove from cart"
+                  >
+                    <i class="fas fa-trash text-lg group-hover/btn:-translate-y-1 transition-transform"></i>
+                  </button>
+                  <span class="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">Remove</span>
+                </div>
               </div>
             </div>
           </div>
@@ -261,10 +280,27 @@ const loadCart = () => {
 }
 
 const removeFromCart = (index) => {
-  cartItems.value.splice(index, 1)
-  const username = localStorage.getItem('username')
-  const cartKey = `cart_${username}`
-  localStorage.setItem(cartKey, JSON.stringify(cartItems.value))
+  const item = cartItems.value[index]
+  
+  // Show confirmation
+  if (confirm(`Remove ${item.brand} ${item.model} from cart?`)) {
+    // Remove item with animation
+    const element = document.querySelectorAll('[class*="bg-gray-800/50"]')[index]
+    if (element) {
+      element.style.animation = 'slideOutRight 0.3s ease-in forwards'
+      setTimeout(() => {
+        cartItems.value.splice(index, 1)
+        const username = localStorage.getItem('username')
+        const cartKey = `cart_${username}`
+        localStorage.setItem(cartKey, JSON.stringify(cartItems.value))
+      }, 300)
+    } else {
+      cartItems.value.splice(index, 1)
+      const username = localStorage.getItem('username')
+      const cartKey = `cart_${username}`
+      localStorage.setItem(cartKey, JSON.stringify(cartItems.value))
+    }
+  }
 }
 
 const saveCheckoutSettings = () => {
@@ -360,6 +396,25 @@ const contactSellerBeforeCheckout = async () => {
 
 const confirmCheckout = async () => {
   try {
+    // Show processing animation
+    const processingModal = document.createElement('div')
+    processingModal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center'
+    processingModal.innerHTML = `
+      <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-12 border border-gray-700 max-w-md w-full text-center animate-scale-in shadow-2xl">
+        <div class="mb-6">
+          <i class="fas fa-spinner text-6xl text-red-500 animate-spin"></i>
+        </div>
+        <h2 class="text-3xl font-bold text-white mb-3">Processing Order</h2>
+        <p class="text-gray-300 mb-2">Creating your purchase order...</p>
+        <div class="flex items-center justify-center gap-2 mt-4">
+          <span class="w-2 h-2 bg-red-500 rounded-full animate-bounce"></span>
+          <span class="w-2 h-2 bg-red-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
+          <span class="w-2 h-2 bg-red-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+        </div>
+      </div>
+    `
+    document.body.appendChild(processingModal)
+
     const response = await fetch('http://localhost:5000/api/orders', {
       method: 'POST',
       headers: {
@@ -379,20 +434,73 @@ const confirmCheckout = async () => {
 
     const data = await response.json()
 
+    // Remove processing modal
+    processingModal.remove()
+
     if (data.success) {
+      // Show success modal with animation
+      const successModal = document.createElement('div')
+      successModal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center animate-fade-in'
+      successModal.innerHTML = `
+        <div class="bg-gradient-to-br from-green-900 to-green-800 rounded-3xl p-12 border border-green-500/50 max-w-md w-full text-center animate-pop-in shadow-2xl shadow-green-500/50">
+          <div class="mb-6 animate-bounce">
+            <i class="fas fa-check-circle text-6xl text-green-400"></i>
+          </div>
+          <h2 class="text-3xl font-bold text-white mb-3">Order Confirmed!</h2>
+          <p class="text-gray-200 mb-2">Your order has been successfully created</p>
+          <div class="bg-green-800/50 border border-green-600 rounded-xl p-4 my-6">
+            <p class="text-sm text-gray-300 mb-2">Order Summary</p>
+            <p class="text-xl font-bold text-green-300 mb-2">฿${formatPrice(totalPrice.value)}</p>
+            <p class="text-xs text-gray-400">You will be redirected to Orders page...</p>
+          </div>
+          <p class="text-gray-300 text-sm">Redirecting in 3 seconds...</p>
+        </div>
+      `
+      document.body.appendChild(successModal)
+      
       showCheckoutModal.value = false
-      showSuccessModal.value = true
       
       const username = localStorage.getItem('username')
       const cartKey = `cart_${username}`
       localStorage.removeItem(cartKey)
       cartItems.value = []
+
+      // Redirect after 3 seconds
+      setTimeout(() => {
+        successModal.remove()
+        router.push('/orders')
+      }, 3000)
     } else {
-      alert('❌ Error creating order: ' + data.message)
+      // Error modal
+      const errorModal = document.createElement('div')
+      errorModal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center'
+      errorModal.innerHTML = `
+        <div class="bg-gradient-to-br from-red-900 to-red-800 rounded-3xl p-8 border border-red-500/50 max-w-md w-full text-center shadow-2xl shadow-red-500/50">
+          <i class="fas fa-exclamation-circle text-5xl text-red-400 mb-4 block"></i>
+          <h2 class="text-2xl font-bold text-white mb-2">Order Failed</h2>
+          <p class="text-gray-300 mb-4">${data.message || 'Error creating order'}</p>
+          <button onclick="this.closest('div').parentElement.remove()" class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg">
+            Try Again
+          </button>
+        </div>
+      `
+      document.body.appendChild(errorModal)
     }
   } catch (error) {
     console.error('Error:', error)
-    alert('Server error, please try again')
+    const errorModal = document.createElement('div')
+    errorModal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center'
+    errorModal.innerHTML = `
+      <div class="bg-gradient-to-br from-red-900 to-red-800 rounded-3xl p-8 border border-red-500/50 max-w-md w-full text-center shadow-2xl">
+        <i class="fas fa-times-circle text-5xl text-red-400 mb-4 block"></i>
+        <h2 class="text-2xl font-bold text-white mb-2">Server Error</h2>
+        <p class="text-gray-300 mb-4">Please try again</p>
+        <button onclick="this.closest('div').parentElement.remove()" class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg">
+          Close
+        </button>
+      </div>
+    `
+    document.body.appendChild(errorModal)
   }
 }
 
@@ -474,5 +582,83 @@ input[type="range"] {
 .installment-slider::-moz-range-track {
   background: transparent;
   border: none;
+}
+
+/* Remove item animation */
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0) rotateY(0deg);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%) rotateY(20deg);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotateX(-20deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotateX(0deg);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Animation for cart items */
+[class*="bg-gray-800/50"] {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-pop-in {
+  animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Beams background */
+.beams-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
 }
 </style>

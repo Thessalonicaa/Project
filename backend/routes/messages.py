@@ -87,7 +87,7 @@ def send_message():
             'success': True,
             'messageId': str(message.id),
             'message': 'Message sent successfully'
-        }), 200
+        }, 200)
     except Exception as e:
         print(f'Error sending message: {str(e)}')
         return jsonify({
@@ -212,3 +212,14 @@ def get_sellers():
             'success': False,
             'message': 'Error fetching sellers'
         }), 500
+
+def get_seller_phone(username):
+    """Get seller's phone number"""
+    try:
+        seller = Seller.objects(username=username).first()
+        if not seller:
+            return None
+        return getattr(seller, 'phonenumber', '')
+    except Exception as e:
+        print(f"Error getting seller phone: {str(e)}")
+        return None

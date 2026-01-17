@@ -1,0 +1,26 @@
+
+# MANUAL INSTRUCTIONS - ABSOLUTE LAST RESORT
+#
+# The file has corrupted encoding or unusual characters that prevent automated fixes
+# You MUST manually delete lines 297-301 to fix the syntax error
+#
+# STEPS:
+# 1. Close all VS Code windows
+# 2. Open: e:\ProjectFainal\backend\routes\cars.py in Notepad (not VS Code)
+# 3. Press Ctrl+G to open "Go to Line" dialog  
+# 4. Type: 297
+# 5. Click Go
+# 6. You should see:
+#       """
+#       except Exception as e:
+#           print(f"Get car error: {str(e)}")
+#           return jsonify({'error': str(e)}), 500
+#
+# 7. Select all 5 lines (from line 297 to blank line 301)
+# 8. Press Delete
+# 9. File should now show line 297 as: #  UPDATE CAR STATUS
+# 10. Save file (Ctrl+S)
+# 11. Close Notepad
+# 12. Open terminal and run: python app.py
+#
+# If still doesn't work, delete entire cars.py and recreate from backup

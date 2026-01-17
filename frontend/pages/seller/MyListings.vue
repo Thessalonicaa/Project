@@ -1,33 +1,48 @@
-
 <template>
-  <div class="min-h-screen bg-gray-950 text-white p-6">
-    <div class="max-w-6xl mx-auto">
+  <div class="mylistings-page min-h-screen bg-gray-950 text-white p-6 relative overflow-hidden">
+    <!-- Beams Background -->
+    <div class="beams-background">
+      <Beams
+        :beamWidth="3"
+        :beamHeight="25"
+        :beamNumber="10"
+        lightColor="#ff3c03"
+        :speed="1.2"
+        :noiseIntensity="1.7"
+        :scale="0.22"
+        :rotation="10"
+        :width="1920"
+        :height="1080"
+      />
+    </div>
+
+    <div class="max-w-6xl mx-auto relative z-10">
       <!-- Header -->
       <div class="text-center mb-8 animate-slide-down">
         <h1 class="text-4xl font-extrabold text-red-500 mb-2 drop-shadow-lg">
           <i class="fas fa-list mr-3"></i>My Car Listings
         </h1>
-        <p class="text-gray-400">จัดการรถของคุณที่ลงขาย</p>
+        <p class="text-gray-400">Manage Your Car Listings</p>
       </div>
 
       <!-- No Listings -->
       <div v-if="sellerCars.length === 0" class="text-center py-16 animate-fade-in">
         <i class="fas fa-inbox text-6xl text-gray-600 mb-4"></i>
-        <p class="text-2xl text-gray-400 mb-6">ยังไม่มีรถที่ลงขาย</p>
-        <NuxtLink
-          to="/seller/PostCar"
+        <p class="text-2xl text-gray-400 mb-6">No Cars Listed Yet</p>
+        <button
+          @click="handlePostCarClick"
           class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors font-semibold"
         >
-          <i class="fas fa-plus mr-2"></i>ลงขายรถเลย
-        </NuxtLink>
+          <i class="fas fa-plus mr-2"></i>Post a Car for Sale
+        </button>
       </div>
 
       <!-- Listings Grid -->
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
         <div
           v-for="(car, index) in sellerCars"
-          :key="car.id"
-          :data-car-id="car.id"
+          :key="car.id || car._id"
+          :data-car-id="car.id || car._id"
           class="bg-gray-800/50 rounded-xl overflow-hidden border border-gray-700 hover:border-red-500 transition-all transform hover:-translate-y-2 duration-300 animate-form-item relative"
           :style="{ 'animation-delay': `${index * 0.1}s` }"
         >
@@ -77,7 +92,7 @@
             <!-- Actions -->
             <div class="flex gap-2 pt-2">
               <NuxtLink
-                :to="`/car/${car.id}`"
+                :to="`/car/${car.id || car._id}`"
                 class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-semibold text-center"
               >
                 <i class="fas fa-eye mr-1"></i>View
@@ -85,7 +100,7 @@
 
               <button
                 v-if="!car.sold_out"
-                @click="markAsSoldOut(car.id)"
+                @click="markAsSoldOut(car.id || car._id)"
                 class="flex-1 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors text-sm font-semibold"
               >
                 <i class="fas fa-check mr-1"></i>Sold
@@ -93,14 +108,14 @@
 
               <button
                 v-else
-                @click="markAsActive(car.id)"
+                @click="markAsActive(car.id || car._id)"
                 class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-semibold"
               >
                 <i class="fas fa-redo mr-1"></i>Active
               </button>
 
               <button
-                @click="deleteListing(car.id)"
+                @click="deleteListing(car.id || car._id)"
                 class="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-semibold animate-pulse-subtle"
               >
                 <i class="fas fa-trash mr-1"></i>Delete
@@ -118,7 +133,7 @@
       <div v-if="showDeleteModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70">
         <div class="bg-gray-900 rounded-2xl p-8 max-w-sm w-full mx-4 animate-pop-in">
           <h2 class="text-2xl font-bold text-white mb-4">Delete Listing?</h2>
-          <p class="text-gray-300 mb-6">คุณแน่ใจว่าต้องการลบรายการนี้ไหม?</p>
+          <p class="text-gray-300 mb-6">Are you sure you want to delete this listing?</p>
           <div class="flex gap-3">
             <button
               @click="showDeleteModal = false"
@@ -152,6 +167,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import Beams from '~/components/Beams.vue'
 
 const router = useRouter()
 const sellerCars = ref([])
@@ -165,21 +181,58 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('th-TH').format(price)
 }
 
+const handlePostCarClick = () => {
+  const isSeller = localStorage.getItem('is_seller')
+  const role = localStorage.getItem('role')
+  
+  // Check if user is seller
+  if (isSeller !== 'true' && role !== 'seller') {
+    // Not a seller, redirect to Register Seller page
+    router.push('/Register-seller')
+  } else {
+    // Already a seller, go to PostCar
+    router.push('/seller/PostCar')
+  }
+}
+
 onMounted(async () => {
   await fetchSellerCars()
 })
 
+
 const fetchSellerCars = async () => {
   try {
-    const username = localStorage.getItem('username')
-    const response = await fetch(`http://localhost:5000/api/cars/seller/${username}`)
-    const data = await response.json()
+    const token = localStorage.getItem('token')
+    if (!token) {
+      console.log('No token found')
+      sellerCars.value = []
+      return
+    }
 
-    if (data.success) {
+    console.log('Fetching seller cars with token...')
+    
+    // Get cars for current logged-in seller
+    const response = await fetch('http://localhost:5000/api/cars/my-listings', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    const data = await response.json()
+    console.log('Cars response:', data)
+
+    if (data.success && Array.isArray(data.cars)) {
       sellerCars.value = data.cars
+      console.log('Cars loaded:', sellerCars.value.length)
+    } else {
+      console.log('No cars found')
+      sellerCars.value = []
     }
   } catch (error) {
     console.error('Error fetching seller cars:', error)
+    sellerCars.value = []
   }
 }
 
@@ -195,7 +248,7 @@ const markAsSoldOut = async (carId) => {
     })
 
     if (response.ok) {
-      const car = sellerCars.value.find(c => c.id === carId)
+      const car = sellerCars.value.find(c => (c.id || c._id) === carId)
       if (car) {
         car.sold_out = true
         
@@ -203,8 +256,8 @@ const markAsSoldOut = async (carId) => {
         showSoldOutAnimation(carId)
         
         successMessage.value = {
-          title: 'ทำเครื่องหมายแล้ว',
-          message: 'รถนี้ถูกทำเครื่องหมายว่าขายแล้ว'
+          title: 'Marked as Sold Out',
+          message: 'This car has been marked as sold out'
         }
         showSuccessModal.value = true
         
@@ -220,7 +273,7 @@ const markAsSoldOut = async (carId) => {
             })
             
             if (deleteResponse.ok) {
-              sellerCars.value = sellerCars.value.filter(c => c.id !== carId)
+              sellerCars.value = sellerCars.value.filter(c => (c.id || c._id) !== carId)
             }
           } catch (error) {
             console.error('Error auto-deleting car:', error)
@@ -267,13 +320,13 @@ const markAsActive = async (carId) => {
     })
 
     if (response.ok) {
-      const car = sellerCars.value.find(c => c.id === carId)
+      const car = sellerCars.value.find(c => (c.id || c._id) === carId)
       if (car) {
         car.sold_out = false
         
         successMessage.value = {
-          title: 'เปิดใช้งานแล้ว',
-          message: 'รถนี้กลับเป็นสถานะกำลังขาย'
+          title: 'Reactivated',
+          message: 'This car has been reactivated for sale'
         }
         showSuccessModal.value = true
       }
@@ -312,13 +365,13 @@ const confirmDelete = async () => {
     const data = await response.json()
 
     if (response.ok && data.success) {
-      sellerCars.value = sellerCars.value.filter(car => car.id !== deletingCarId.value)
+      sellerCars.value = sellerCars.value.filter(car => (car.id || car._id) !== deletingCarId.value)
       showDeleteModal.value = false
       deletingCarId.value = null
       
       successMessage.value = {
-        title: 'ลบสำเร็จ',
-        message: 'รายการขายถูกลบแล้ว'
+        title: 'Deleted Successfully',
+        message: 'This listing has been deleted'
       }
       showSuccessModal.value = true
     } else {
@@ -326,22 +379,36 @@ const confirmDelete = async () => {
     }
   } catch (error) {
     console.error('Error deleting car:', error)
-    alert('❌ เกิดข้อผิดพลาดในการลบรายการ: ' + error.message)
+    alert('❌ Error deleting listing: ' + error.message)
   }
 }
 </script>
 
 <style scoped>
+.mylistings-page {
+  position: relative;
+}
+
+.beams-background {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
 .animate-slide-down {
-  animation: slideDown 0.6s ease-out;
+  animation: slideDown 0.6s ease-out both;
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out;
+  animation: fadeIn 0.5s ease-out both;
 }
 
 .animate-form-item {
-  animation: formItem 0.5s ease-out forwards;
+  animation: formItem 0.5s ease-out forwards both;
   opacity: 0;
 }
 

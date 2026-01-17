@@ -25,7 +25,7 @@ watch(
     const isAuthPage = ['/login', '/register', '/register-seller'].includes(newPath)
     
     if (!token && !isAuthPage) {
-      router.push('/log/login')
+      router.push('/login')
     } else if (token && isAuthPage) {
       router.push('/')
     }
@@ -56,5 +56,22 @@ onMounted(() => {
 .page-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+/* Hide scrollbar on all browsers */
+html {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  overflow-y: scroll; /* Reserve space */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 </style>

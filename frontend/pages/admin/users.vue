@@ -20,7 +20,7 @@
       </div>
 
       <div v-else>
-        <!-- Search Bar -->
+        <!-- Search Bar & Add Button -->
         <div class="mb-6 flex gap-4">
           <input 
             v-model="filter" 
@@ -29,6 +29,9 @@
           />
           <button @click="fetchAll" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-all flex items-center gap-2 font-semibold">
             <i class="fas fa-sync"></i>Refresh
+          </button>
+          <button @click="openAddUser" class="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg transition-all flex items-center gap-2 font-semibold">
+            <i class="fas fa-plus"></i>Add User
           </button>
         </div>
 
@@ -70,9 +73,121 @@
       </div>
     </div>
 
+    <!-- Add User Modal -->
+    <div v-if="showAddUser" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 w-full max-w-md border border-gray-700 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-2xl font-bold text-white">Add New User</h3>
+          <button @click="closeAddUser" class="text-gray-400 hover:text-white text-2xl">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div class="space-y-4">
+          <!-- Username -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-300 mb-2">Username</label>
+            <input 
+              v-model="addForm.username" 
+              @blur="checkUsernameExists(addForm.username)"
+              class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all"
+            />
+            <p v-if="usernameError" class="text-red-400 text-xs mt-1">
+              <i class="fas fa-exclamation-circle mr-1"></i>{{ usernameError }}
+            </p>
+            <p v-else-if="addForm.username && !usernameError" class="text-green-400 text-xs mt-1">
+              <i class="fas fa-check-circle mr-1"></i>Username available
+            </p>
+          </div>
+
+          <!-- Password -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-300 mb-2">Password</label>
+            <input 
+              v-model="addForm.password" 
+              type="password"
+              
+              class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all"
+            />
+          </div>
+
+          <!-- Role Selection -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-300 mb-2">Role</label>
+            <select 
+              v-model="addForm.role"
+              class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all"
+            >
+              <option value="user">User</option>
+              <option value="seller">Seller</option>
+            </select>
+          </div>
+
+          <!-- Dynamic Fields for Seller Role -->
+          <transition name="fade">
+            <div v-if="addForm.role === 'seller'" class="space-y-4 pt-4 border-t border-gray-700">
+              <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Email</label>
+                <input 
+                  v-model="addForm.email" 
+                  type="email" 
+                
+                  class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Shop Name</label>
+                <input 
+                  v-model="addForm.business_name" 
+               
+                  class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Phone Number</label>
+                <input 
+                  v-model="addForm.phonenumber" 
+                
+                  class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Address</label>
+                <textarea 
+                  v-model="addForm.address" 
+                 
+                  class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all resize-none"
+                  rows="3"
+                ></textarea>
+              </div>
+            </div>
+          </transition>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+          <button 
+            @click="performAddUser" 
+            :disabled="!addForm.username || !addForm.password || usernameError"
+            class="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg text-white font-bold transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+          >
+            <i class="fas fa-user-plus"></i>Add User
+          </button>
+          <button 
+            @click="closeAddUser" 
+            class="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-semibold transition-all"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Edit Modal -->
     <div v-if="editing" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 w-full max-w-md border border-gray-700 shadow-2xl animate-scale-in">
+      <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 w-full max-w-md border border-gray-700 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-2xl font-bold text-white">Edit User Account</h3>
           <button @click="closeEdit" class="text-gray-400 hover:text-white text-2xl">
@@ -81,41 +196,80 @@
         </div>
         
         <div class="space-y-4">
+          <!-- Username (readonly) -->
           <div>
             <label class="block text-sm font-semibold text-gray-300 mb-2">Username</label>
-            <input v-model="editForm.username" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all" />
+            <input 
+              v-model="editForm.username" 
+              class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-400 cursor-not-allowed" 
+              readonly 
+            />
           </div>
           
+          <!-- Role Selection -->
           <div>
             <label class="block text-sm font-semibold text-gray-300 mb-2">Role</label>
-            <select v-model="editForm.role" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all">
+            <select 
+              v-model="editForm.role" 
+              @change="onRoleChange"
+              class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all"
+            >
               <option value="user">User</option>
               <option value="seller">Seller</option>
-              <option value="admin">Admin</option>
             </select>
           </div>
 
-          <div>
-            <label class="block text-sm font-semibold text-gray-300 mb-2">Email</label>
-            <input v-model="editForm.email" type="email" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all" />
-          </div>
+          <!-- Dynamic Fields for Seller Role -->
+          <transition name="fade">
+            <div v-if="editForm.role === 'seller'" class="space-y-4 pt-4 border-t border-gray-700">
+              <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Email</label>
+                <input 
+                  v-model="editForm.email" 
+                  type="email" 
+                  class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all"
+                />
+              </div>
 
-          <div>
-            <label class="block text-sm font-semibold text-gray-300 mb-2">Address</label>
-            <input v-model="editForm.address" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all" />
-          </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Shop Name</label>
+                <input 
+                  v-model="editForm.business_name" 
+                  class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all"
+                />
+              </div>
 
-          <div>
-            <label class="block text-sm font-semibold text-gray-300 mb-2">Phone Number</label>
-            <input v-model="editForm.phonenumber" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all" />
-          </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Phone Number</label>
+                <input 
+                  v-model="editForm.phonenumber" 
+                  class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Address</label>
+                <textarea 
+                  v-model="editForm.address" 
+                  class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none transition-all resize-none"
+                  rows="3"
+                ></textarea>
+              </div>
+            </div>
+          </transition>
         </div>
 
         <div class="mt-6 flex gap-3">
-          <button @click="saveEdit" class="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg text-white font-bold transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+          <button 
+            @click="saveEdit" 
+            class="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-lg text-white font-bold transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+          >
             <i class="fas fa-save"></i>Save Changes
           </button>
-          <button @click="closeEdit" class="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-semibold transition-all">
+          <button 
+            @click="closeEdit" 
+            class="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-semibold transition-all"
+          >
             Cancel
           </button>
         </div>
@@ -126,7 +280,7 @@
     <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 w-full max-w-md border border-red-500/50 shadow-2xl animate-scale-in">
         <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-600/20 mx-auto mb-4">
-          <i class="fas fa-exclamation text-2xl text-red-500"></i>
+          <i class="fas fa-trash text-2xl text-red-500"></i>
         </div>
         
         <h3 class="text-2xl font-bold text-white text-center mb-2">Delete Account?</h3>
@@ -167,7 +321,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
 const isAdmin = ref(false)
 const users = ref([])
@@ -177,13 +331,37 @@ const editForm = ref({})
 const showDeleteConfirm = ref(false)
 const deleteTarget = ref(null)
 const notification = ref({ show: false, message: '', type: 'success' })
+const showAddUser = ref(false)
+const addForm = ref({
+  username: '',
+  password: '',
+  role: 'user',
+  email: '',
+  business_name: '',
+  phonenumber: '',
+  address: ''
+})
+const usernameError = ref('')
 
 const fetchAll = async () => {
   try {
-    const res = await fetch('http://localhost:5000/api/admin/users')
+    const token = localStorage.getItem('token')
+    if (!token) {
+      console.error('No token found')
+      return
+    }
+
+    const res = await fetch('http://localhost:5000/api/admin/users', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
     const data = await res.json()
     if (data.success) users.value = data.users || []
-  } catch (e) { console.error(e) }
+    else console.error('Error fetching users:', data.error)
+  } catch (e) { console.error('Fetch error:', e) }
 }
 
 const filtered = computed(() => {
@@ -198,6 +376,130 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('th-TH') : '-'
 const openEdit = (u) => { editForm.value = { ...u }; editing.value = true }
 const closeEdit = () => { editing.value = false; editForm.value = {} }
 
+const openAddUser = () => { 
+  showAddUser.value = true
+  addForm.value = {
+    username: '',
+    password: '',
+    role: 'user',
+    email: '',
+    business_name: '',
+    phonenumber: '',
+    address: ''
+  }
+  usernameError.value = ''
+}
+
+const closeAddUser = () => { 
+  showAddUser.value = false
+  usernameError.value = ''
+}
+
+const checkUsernameExists = async (username) => {
+  if (!username) {
+    usernameError.value = ''
+    return
+  }
+  try {
+    const res = await fetch(`http://localhost:5000/api/check-username/${username}`)
+    const data = await res.json()
+    if (data.exists) {
+      usernameError.value = 'ชื่อผู้ใช้นี้ถูกใช้ไปแล้ว กรุณาลองชื่อแอื่น'
+    } else {
+      usernameError.value = ''
+    }
+  } catch (e) {
+    console.error(e)
+    usernameError.value = 'ไม่สามารถตรวจสอบชื่อผู้ใช้ได้'
+  }
+}
+
+const performAddUser = async () => {
+  try {
+    // Validate required fields
+    if (!addForm.value.username || !addForm.value.password) {
+      showNotification('❌ Please fill in username and password', 'error')
+      return
+    }
+
+    // Check for duplicate username
+    if (usernameError.value) {
+      showNotification('❌ Username already exists', 'error')
+      return
+    }
+
+    // Validate password length
+    if (addForm.value.password.length < 6) {
+      showNotification('❌ Password must be at least 6 characters', 'error')
+      return
+    }
+
+    const payload = {
+      username: addForm.value.username,
+      password: addForm.value.password,
+      role: addForm.value.role
+    }
+
+    // If seller, validate and add seller fields
+    if (addForm.value.role === 'seller') {
+      if (!addForm.value.email || !addForm.value.business_name) {
+        showNotification('❌ Please fill in email and shop name for sellers', 'error')
+        return
+      }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(addForm.value.email)) {
+        showNotification('❌ Please enter a valid email', 'error')
+        return
+      }
+
+      payload.email = addForm.value.email
+      payload.business_name = addForm.value.business_name
+      payload.phonenumber = addForm.value.phonenumber
+      payload.address = addForm.value.address
+    }
+
+    const res = await fetch('http://localhost:5000/api/admin/users', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(payload)
+    })
+
+    const data = await res.json()
+    if (data.success) {
+      fetchAll()
+      closeAddUser()
+      showNotification('✅ User added successfully!', 'success')
+    } else {
+      showNotification('❌ ' + (data.message || 'Error adding user'), 'error')
+    }
+  } catch (e) {
+    console.error(e)
+    showNotification('❌ Error adding user', 'error')
+  }
+}
+
+// Watch for username changes in add form
+watch(() => addForm.value.username, (newVal) => {
+  if (newVal) {
+    checkUsernameExists(newVal)
+  }
+})
+
+const onRoleChange = () => {
+  // When switching to seller, initialize seller fields if not present
+  if (editForm.value.role === 'seller') {
+    if (!editForm.value.email) editForm.value.email = ''
+    if (!editForm.value.business_name) editForm.value.business_name = ''
+    if (!editForm.value.phonenumber) editForm.value.phonenumber = ''
+    if (!editForm.value.address) editForm.value.address = ''
+  }
+}
+
 const showNotification = (message, type = 'success') => {
   notification.value = { show: true, message, type }
   setTimeout(() => {
@@ -207,9 +509,13 @@ const showNotification = (message, type = 'success') => {
 
 const saveEdit = async () => {
   try {
+    const token = localStorage.getItem('token')
     const res = await fetch(`http://localhost:5000/api/admin/users/${editForm.value._id}`, {
       method: 'PUT', 
-      headers: { 'Content-Type': 'application/json' }, 
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }, 
       body: JSON.stringify(editForm.value)
     })
     const data = await res.json()
@@ -218,7 +524,7 @@ const saveEdit = async () => {
       closeEdit()
       showNotification('✅ User updated successfully!', 'success')
     } else {
-      showNotification('❌ ' + (data.message || 'Error updating user'), 'error')
+      showNotification('❌ ' + (data.message || data.error || 'Error updating user'), 'error')
     }
   } catch (e) { 
     console.error(e)
@@ -231,14 +537,21 @@ const closeDeleteConfirm = () => { showDeleteConfirm.value = false; deleteTarget
 
 const performDelete = async () => {
   try {
-    const res = await fetch(`http://localhost:5000/api/admin/users/${deleteTarget.value._id}`, { method: 'DELETE' })
+    const token = localStorage.getItem('token')
+    const res = await fetch(`http://localhost:5000/api/admin/users/${deleteTarget.value._id}`, { 
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
     const data = await res.json()
     if (data.success) { 
       fetchAll()
       closeDeleteConfirm()
       showNotification('✅ User deleted successfully!', 'success')
     } else {
-      showNotification('❌ ' + (data.message || 'Error deleting user'), 'error')
+      showNotification('❌ ' + (data.message || data.error || 'Error deleting user'), 'error')
     }
   } catch (e) { 
     console.error(e)
@@ -289,4 +602,15 @@ onMounted(() => {
 
 .slide-down-enter-active { animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .slide-down-leave-active { animation: slideUp 0.3s ease-in; }
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
 </style>

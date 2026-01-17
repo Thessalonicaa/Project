@@ -1,0 +1,13 @@
+
+# cars.py has duplicate get_car function
+# The easiest way to fix: Find and manually delete the SECOND get_car definition
+#
+# Steps:
+# 1. Ctrl+H (Find and Replace) in VS Code
+# 2. Search for: "def get_car"
+# 3. You'll see it appears 2 times
+# 4. Go to the SECOND one
+# 5. Select from "#  GET SINGLE CAR BY ID" down to "return jsonify({'error': str(e)}), 500"
+# 6. Delete it
+# 7. Save file
+# 8. Run: python app.py

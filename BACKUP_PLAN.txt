@@ -1,0 +1,15 @@
+
+#!/usr/bin/env python3
+# BACKUP INSTRUCTION:
+# 1. Rename current broken file:
+#    e:\ProjectFainal\backend\routes\cars.py → cars.py.broken
+#
+# 2. Create brand new clean cars.py with only the working functions
+#
+# Quick Command (run in terminal):
+#
+# cd e:\ProjectFainal\backend\routes
+# ren cars.py cars.py.broken
+# 
+# Then restart backend - it will fail with import error
+# Then manually create new cars.py from template

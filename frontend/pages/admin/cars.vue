@@ -1,5 +1,20 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-950 to-gray-900 text-white p-6">
+  <div class="min-h-screen bg-gray-950 text-white p-6 relative overflow-hidden">
+    <div class="beams-background">
+      <Beams
+        :beamWidth="3"
+        :beamHeight="25"
+        :beamNumber="20"
+        lightColor="#ff3c03"
+        :speed="2"
+        :noiseIntensity="1.75"
+        :scale="0.2"
+        :rotation="30"
+        :width="1920"
+        :height="1080"
+      />
+    </div>
+
     <div class="max-w-7xl mx-auto">
       <!-- Header -->
       <div class="flex items-center justify-between mb-8">
@@ -236,4 +251,14 @@ onMounted(() => {
   to { opacity: 1; transform: scale(1); }
 }
 .animate-scale-in { animation: scaleIn 0.3s ease-out; }
+
+.beams-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
 </style>

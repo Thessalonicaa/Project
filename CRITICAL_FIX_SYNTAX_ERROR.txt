@@ -1,0 +1,23 @@
+
+# CRITICAL FIX NEEDED
+# 
+# File: e:\ProjectFainal\backend\routes\cars.py
+# Line: 297 has unterminated triple-quoted string
+#
+# SOLUTION: Find and delete these lines:
+# Line 297:     """
+# Line 298:     except Exception as e:
+# Line 299:         print(f"Get car error: {str(e)}")
+# Line 300:         return jsonify({'error': str(e)}), 500
+#
+# Replace with:
+#     pass
+#
+# Steps:
+# 1. Open e:\ProjectFainal\backend\routes\cars.py
+# 2. Go to line 297 (Ctrl+G in VS Code)
+# 3. Select lines 297-300
+# 4. Delete them
+# 5. Type:     pass
+# 6. Save file
+# 7. python app.py
